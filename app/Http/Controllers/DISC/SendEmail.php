@@ -23,9 +23,9 @@ class SendEmail extends Controller
     public static function send_email($users)
     {
         try {
-            Mail::to($users->email)->send(new SendToken([
-                "unique_id" => $users->token,
-                "fullname" => $users->fullname,
+            Mail::to($users['email'])->send(new SendToken([
+                "unique_id" => $users['token'],
+                "fullname" => $users['fullname'],
             ]));
             return "success";
         } catch (Exception $ex) {
