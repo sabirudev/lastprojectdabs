@@ -19,7 +19,7 @@ class User extends Controller
         $table = "users";
         if (AuthAPI::get_auth_api($request)) {
             $data = $request->all();
-            $check = DB::table($table)->where('email', '=', $data['email'])->where('created_at', '<=', date('Y-m-d') . " 23:59:59")->get();
+            $check = DB::table($table)->where('email', '=', $data['email'])->where('created_at', '<=', date('Y-m-d') . " 23:59:59")->where('created_at', '>=', date('Y-m-d') . " 00:00:00")->get();
             if ($check->count() > 0) {
                 return JsonReturn::failedReturn("Email anda sudah digunakan pada hari ini", $table, $request);
             } else {
@@ -44,16 +44,22 @@ class User extends Controller
     {
         $table = "users";
         if (AuthAPI::get_auth_api($request)) {
-            $data = $request->all();
-            $data['token'] = Str::random(60);
-            $data['ip_address'] = $request->ip();
-            $sendEmail = SendEmail::send_email($data);
-            if ($sendEmail == 'success') {
-                $id = DB::table($table)->insertGetId($data);
-                $data = DB::table($table)->where('id', '=', $id)->first();
-                return JsonReturn::successReturn("Terimaksih sudah mengikuti event ini, Check email kamu untuk lebih lanjut", $data, $table, $request);
+            $dateNow = date('Y-m-d H:i:s');
+            $lastDate = strtotime('2022-01-16 00:00:00');
+            if ($dateNow > $lastDate) {
+                return JsonReturn::failedReturn('Event sudah berakhir', $table, $request);
             } else {
-                return JsonReturn::failedReturn($sendEmail, $table, $request);
+                $data = $request->all();
+                $data['token'] = Str::random(60);
+                $data['ip_address'] = $request->ip();
+                $sendEmail = SendEmail::send_email($data);
+                if ($sendEmail == 'success') {
+                    $id = DB::table($table)->insertGetId($data);
+                    $data = DB::table($table)->where('id', '=', $id)->first();
+                    return JsonReturn::successReturn("Terimaksih sudah mengikuti event ini, Check email kamu untuk lebih lanjut", $data, $table, $request);
+                } else {
+                    return JsonReturn::failedReturn($sendEmail, $table, $request);
+                }
             }
         } else {
             return JsonReturn::failedReturn('Unauthorized', $table, $request);
@@ -95,13 +101,25 @@ class User extends Controller
         $table = "users";
         if (AuthAPI::get_auth_api($request)) {
             $data = $request->all();
-            $checIndex = DB::table($table)->where('token', '=', $data['token'])->where('status', '=', 0)->first();
+            $checIndex = DB::table($table)->where('token', '=', $data['id'])->where('status', '=', 0)->first();
             if ($checIndex) {
                 return JsonReturn::successReturn('Sueccess ' . $request->method() . ' ' . $table, $checIndex, $table, $request);
             } else {
                 return JsonReturn::failedReturn('Sesi anda sudah expired atau tidak terdaftar', $table, $request);
             }
             // return JsonReturn::successReturn('Fetch message', $getChat, $table, $request);
+        } else {
+            return JsonReturn::failedReturn('Unauthorized', $table, $request);
+        }
+    }
+
+    public function get_score(Request $request)
+    {
+        $table = "users";
+        if (AuthAPI::get_auth_api($request)) {
+            $data = $request->all();
+            $data = DB::table($table)->where('status', '!=', 0)->orderByDesc('score')->take(10)->get();
+            return JsonReturn::successReturn('Fetch Score', $data, $table, $request);
         } else {
             return JsonReturn::failedReturn('Unauthorized', $table, $request);
         }

@@ -5,7 +5,7 @@
         </div>
         <p style="font-size:1.1em">Hi, {!!$fullname!!} </p>
         <p>Berikut link untuk bermain anda</p>
-        <a href="https://trufflebelly.dabstech.site/games?id=%7B!!$unique_id!!%7D" target="_blank" rel="noopener noreferrer">
+        <a href="https://trufflebelly.dabstech.site/games?id={!!$unique_id!!}" target="_blank" rel="noopener noreferrer">
             <h2 style="background: #00466a;margin: 0 auto;width: max-content;padding: 0 10px;color: #fff;border-radius: 4px;">Mainkan Game</h2>
         </a>
         <p style="font-size:0.9em;">Salam Hormat,<br />DABS Technology</p>
